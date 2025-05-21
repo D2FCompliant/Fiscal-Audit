@@ -1,26 +1,23 @@
-# Interface d'Audit – D2F Compliant
 
-Ce dépôt contient une interface HTML multilingue complète pour réaliser un audit des exigences fiscales, PDP et archivage probant.
+# Interface d'Audit D2F Compliant
 
-## ✅ Fonctionnalités incluses
+Ce dépôt contient une interface HTML complète pour l’audit des exigences réglementaires françaises liées à la conformité des logiciels de facturation, de transmission PDP et de journalisation fiscale.
 
-- 30 exigences dynamiques FR/EN avec attendus réglementaires
-- Interface multilingue (FR / EN)
-- Zones de réponse, preuve, conformité
-- Bouton PDF : export du rapport complet avec :
-  - Horodatage ISO
-  - Synthèse de conformité
-  - Recommandations
-  - Note finale (/20)
-  - Logo D2F Compliant
+## 🔧 Utilisation
 
-## 🚀 Déploiement GitHub Pages
+1. Pousser les fichiers sur un dépôt GitHub public
+2. Aller dans Settings > Pages
+3. Choisir `main` comme branche et `/root` comme répertoire
+4. L’interface sera accessible à l’URL :
+   `https://<votre-utilisateur>.github.io/<nom-du-dépôt>/`
 
-1. Créez un dépôt sur GitHub (ex. : `d2f-audit-interface`)
-2. Uploadez les fichiers `index.html` et `README.md`
-3. Allez dans `Settings > Pages`
-4. Source = `main`, chemin `/root`
-5. Cliquez sur "Save"
+## ✅ Fonctionnalités
 
-🔗 Votre audit sera accessible sur :
-`https://<votre-utilisateur>.github.io/d2f-audit-interface/`
+- 30 exigences auditées dynamiquement
+- Sélecteur de langue (FR/EN)
+- Export PDF horodaté avec note, synthèse et logo
+- Compatible navigateur et Safari
+
+---
+
+© D2F Compliant – Usage professionnel autorisé
