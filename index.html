@@ -137,10 +137,10 @@ async function genererPDF() {
     doc.setFont(undefined, 'bold');
     doc.text(titre || `Exigence ${i+1}`, 10, y); y += 5;
     doc.setFont(undefined, 'normal');
-    if (attendu) doc.text(attendu, 10, y); y += 5;
-    doc.text("Réponse : " + (reponse || ""), 10, y); y += 5;
-    doc.text("Preuve : " + (preuve || ""), 10, y); y += 5;
-    doc.text("Conformité : " + (conf || ""), 10, y); y += 8;
+    if (attendu) doc.text($1, 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    doc.text("Réponse : " + (reponse || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    doc.text("Preuve : " + (preuve || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    doc.text("Conformité : " + (conf || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 8;
     if (y > 270) { doc.addPage(); y = 10; }
   });
 
@@ -176,8 +176,6 @@ logo.onload = function() {
 </script>
 
 <!-- ⚠️ RÉINSERTION AUTOMATIQUE DES 30 BLOCS DE QUESTIONS ICI SERA FAITE DANS LA PROCHAINE ÉTAPE -->
-<button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const langues = {
