@@ -4,9 +4,310 @@
   <meta charset="UTF-8">
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; background-color: #f9f9f9; }
+    h1, h2 { color: #222; }
+    label { display: block; margin-top: 1em; font-weight: bold; }
+    input, textarea, select {
+      width: 100%; padding: 0.5em; margin-top: 0.2em;
+      border-radius: 4px; border: 1px solid #bbb;
+    }
+    button {
+      margin-top: 2em; padding: 0.75em 2em; background-color: #0066cc;
+      color: white; border: none; border-radius: 4px; cursor: pointer;
+    }
+    .question-block, .identite {
+      background-color: #fff; border-radius: 6px; margin-bottom: 2em;
+      padding: 1em; border: 1px solid #ccc;
+    }
+    .attendu {
+      font-size: 0.9em; color: #333; background-color: #eef;
+      padding: 0.5em; margin-top: 0.5em; border-left: 4px solid #88a;
+    }
+  </style>
 </head>
 <body>
-<h1>✔️ Interface complète avec multilingue, PDF, exigences et logo</h1>
-<p>Remplacer ce fichier avec le contenu réel du canvas exporté.</p>
+<h1>Audit de Conformité – D2F Compliant d.o.o</h1>
+
+<label for="langSwitch">🌐 Langue / Language</label>
+<select id="langSwitch" onchange="changerLangue(this.value)">
+  <option value="fr">Français</option>
+  <option value="en">English</option>
+</select>
+
+<div class="identite">
+  <h2>🧾 Informations sur l'entité auditée</h2>
+  <label for="societe">Nom de la société</label>
+  <input id="societe">
+  <label for="adresse">Adresse</label>
+  <input id="adresse">
+  <label for="participants">Participants</label>
+  <textarea id="participants"></textarea>
+</div>
+
+<div id="questionnaire">
+<script>
+const exigences_traduites = {
+  fr: [
+    ["Unicité des factures", "Chaque facture doit comporter un identifiant unique, non réutilisable, chronologique et sans rupture de séquence. Réf. BOI-CF-COM-10-10-20-60."],
+    ["Horodatage serveur sécurisé", "Les opérations doivent être horodatées depuis une source fiable (NTP), stockées de manière inviolable. Réf. Annexe 2 NF525."],
+    ["Chaînage des journaux d’événements", "Chaque événement du journal doit comporter le hash de l’événement précédent (HMAC/SHA256 recommandé)."],
+    ["Archivage probant", "Archivage à valeur probante selon la norme NF Z42-020 : intégrité, lisibilité, disponibilité, traçabilité."],
+    ["Validation des exports fiscaux", "Tous les fichiers fiscaux (FEC, Factur-X) doivent être valides au format XSD fourni par l’administration."],
+    ["Accès auditeur sécurisé", "Un accès en lecture seule aux données et journaux doit être prévu pour l’audit fiscal. Réf. BOI-CF-COM-10-10-20-60."],
+    ["Authentification forte", "L'accès aux fonctions sensibles doit être protégé par MFA ou équivalent sécurisé. Conforme RGPD & ANSSI."],
+    ["Mentions fiscales automatiques", "Les mentions obligatoires doivent être générées automatiquement selon le type de document. Réf. CGI art. 242 nonies A."],
+    ["Conservation des journaux 6 ans", "Les journaux d’événements doivent être conservés 6 ans et consultables sur demande."],
+    ["Traçabilité des paiements", "Chaque encaissement/acompte doit être relié à une facture et journalisé."],
+    ["Annulation/modification document", "Toute modification ou annulation doit être tracée et justifiée avec timestamp. Réf. NF525."],
+    ["Suivi de cycle de vie", "Statuts initiaux, validés, annulés, avoirs doivent être tracés et archivés."],
+    ["Export structuré interopérable", "Les formats de facture doivent respecter EN 16931 ou Factur-X. Réf. BOI-TVA-DECLA-30-20-30."],
+    ["Validation XSD et profil CIUS-FR", "Chaque facture doit être conforme à son profil syntaxique. CIUS-FR recommandé."],
+    ["Contrôle des remises", "Les remises commerciales doivent être justifiées, tracées et enregistrées."],
+    ["Gestion des duplicatas", "La réédition d’un document doit être tracée et marquée comme duplicata."],
+    ["Journalisation des accès utilisateurs", "Chaque action utilisateur doit être loguée avec date, heure, nature de l’action."],
+    ["Numérotation continue", "La numérotation des pièces doit être continue sans rupture, format paramétrable."],
+    ["Signature électronique", "La signature électronique qualifiée est recommandée pour les envois vers les PDP."],
+    ["Archivage des annexes", "Les pièces jointes (devis, bons, etc.) doivent être associées à la facture et archivées."],
+    ["Mentions obligatoires facture (papier/électronique)", "La facture doit contenir les mentions légales prévues par l’article 242 nonies A du CGI."],
+    ["Respect format structuré Factur-X/UBL", "Le fichier transmis doit respecter le profil minimum (BASIC WL ou CIUS-FR). Réf. EN 16931."],
+    ["Lien facture avec documents source", "Les références aux documents d’origine doivent être présentes : devis, commande (BT-17, BT-18)."],
+    ["Journalisation émission + transmission", "L’émission et la transmission doivent être enregistrées dans un journal d’audit sécurisé."],
+    ["Gestion des accusés PDP et rejets", "Les statuts ‘déposée’, ‘rejetée’, ‘acceptée’ doivent être journalisés avec réponse PDP."],
+    ["Archivage probant chaîné", "Les factures archivées doivent être chaînées entre elles ou signées individuellement."],
+    ["Mise à jour CDAR", "Le SI doit pouvoir synchroniser les statuts CDAR (Cycle De Vie) avec les retours PDP."],
+    ["Transmission conforme CIUS/CTC-FR", "Le format transmis doit respecter les spécifications CTC-FR ou CIUS-FR."],
+    ["Traçabilité multi-PDP", "Le système doit router les factures vers la bonne PDP selon identifiant client (SIRET, PEPPOL ID)."],
+    ["Réconciliation livraisons/statuts", "Le SI doit rapprocher les transmissions envoyées avec les statuts de réception."]
+  ],
+  en: [
+    ["Invoice uniqueness", "Each invoice must have a unique identifier, non-reusable, chronological, without gaps. Ref. BOI-CF-COM-10-10-20-60."],
+    ["Secure server timestamping", "Operations must be timestamped from a trusted source (NTP), and stored securely. Ref. Annex 2 NF525."],
+    ["Event journal chaining", "Each event in the log must contain the hash of the previous event (HMAC/SHA256 recommended)."],
+    ["Probative archiving", "Archiving must comply with NF Z42-020 for integrity, readability, availability, traceability."],
+    ["Validation of fiscal exports", "All fiscal files (FEC, Factur-X) must be valid against the XSD format provided by authorities."],
+    ["Secure auditor access", "Read-only access must be available for auditors. Ref. BOI-CF-COM-10-10-20-60."],
+    ["Strong authentication", "Access to sensitive functions must be protected by MFA or secure equivalent. RGPD & ANSSI compliant."],
+    ["Automatic fiscal mentions", "Mandatory legal mentions must be generated based on the document type. Ref. CGI art. 242 nonies A."],
+    ["Journal retention 6 years", "Event logs must be retained for 6 years and made available upon request."],
+    ["Payment traceability", "Each payment or deposit must be linked to an invoice and logged."],
+    ["Document cancellation/modification", "Any change or cancellation must be timestamped and justified. Ref. NF525."],
+    ["Lifecycle tracking", "Initial, validated, cancelled and credited statuses must be recorded and archived."],
+    ["Structured interoperable export", "Invoice formats must comply with EN 16931 or Factur-X. Ref. BOI-TVA-DECLA-30-20-30."],
+    ["XSD validation and CIUS-FR profile", "Each invoice must match its syntax profile. CIUS-FR recommended."],
+    ["Discount control", "Commercial discounts must be justified, logged, and recorded."],
+    ["Duplicate handling", "Reissued documents must be logged and marked as duplicates."],
+    ["User access logging", "All user actions must be logged with timestamp and action details."],
+    ["Continuous numbering", "Document numbering must be continuous and gap-free. Format configurable."],
+    ["Electronic signature", "Qualified e-signatures are recommended for PDP transmissions."],
+    ["Annex archiving", "Attachments (quotes, orders) must be linked to the invoice and archived."],
+    ["Mandatory invoice mentions (paper/electronic)", "Invoices must include the legal mentions listed in CGI art. 242 nonies A."],
+    ["Structured format compliance (Factur-X/UBL)", "Transmitted files must meet the minimum profile (BASIC WL or CIUS-FR). Ref. EN 16931."],
+    ["Invoice-to-source linkage", "Invoices must reference source documents: quotes, orders (BT-17, BT-18)."],
+    ["Emission + transmission logging", "Emission and transmission must be recorded in a secure audit journal."],
+    ["PDP acknowledgment and rejection handling", "Statuses like ‘submitted’, ‘rejected’, ‘accepted’ must be logged with PDP response."],
+    ["Chained probative archiving", "Archived invoices must be either chained or individually signed."],
+    ["CDAR updates", "The system must sync invoice lifecycle statuses (CDAR) with PDP feedback."],
+    ["CTC-FR/CIUS transmission compliance", "Transmitted format must comply with CTC-FR or CIUS-FR specifications."],
+    ["Multi-PDP routing", "The system must route invoices to the correct PDP based on customer ID (SIRET, PEPPOL ID)."],
+    ["Delivery status reconciliation", "The system must reconcile transmitted invoices with their delivery statuses."]
+  ]
+};
+  ["Unicité des factures", "Chaque facture doit comporter un identifiant unique, non réutilisable, chronologique et sans rupture de séquence. Réf. BOI-CF-COM-10-10-20-60."],
+  ["Horodatage serveur sécurisé", "Les opérations doivent être horodatées depuis une source fiable (NTP), stockées de manière inviolable. Réf. Annexe 2 NF525."],
+  ["Chaînage des journaux d’événements", "Chaque événement du journal doit comporter le hash de l’événement précédent (HMAC/SHA256 recommandé)."],
+  ["Archivage probant", "Archivage à valeur probante selon la norme NF Z42-020 : intégrité, lisibilité, disponibilité, traçabilité."],
+  ["Validation des exports fiscaux", "Tous les fichiers fiscaux (FEC, Factur-X) doivent être valides au format XSD fourni par l’administration."],
+  ["Accès auditeur sécurisé", "Un accès en lecture seule aux données et journaux doit être prévu pour l’audit fiscal. Réf. BOI-CF-COM-10-10-20-60."],
+  ["Authentification forte", "L'accès aux fonctions sensibles doit être protégé par MFA ou équivalent sécurisé. Conforme RGPD & ANSSI."],
+  ["Mentions fiscales automatiques", "Les mentions obligatoires doivent être générées automatiquement selon le type de document. Réf. CGI art. 242 nonies A."],
+  ["Conservation des journaux 6 ans", "Les journaux d’événements doivent être conservés 6 ans et consultables sur demande."],
+  ["Traçabilité des paiements", "Chaque encaissement/acompte doit être relié à une facture et journalisé."],
+  ["Annulation/modification document", "Toute modification ou annulation doit être tracée et justifiée avec timestamp. Réf. NF525."],
+  ["Suivi de cycle de vie", "Statuts initiaux, validés, annulés, avoirs doivent être tracés et archivés."],
+  ["Export structuré interopérable", "Les formats de facture doivent respecter EN 16931 ou Factur-X. Réf. BOI-TVA-DECLA-30-20-30."],
+  ["Validation XSD et profil CIUS-FR", "Chaque facture doit être conforme à son profil syntaxique. CIUS-FR recommandé."],
+  ["Contrôle des remises", "Les remises commerciales doivent être justifiées, tracées et enregistrées."],
+  ["Gestion des duplicatas", "La réédition d’un document doit être tracée et marquée comme duplicata."],
+  ["Journalisation des accès utilisateurs", "Chaque action utilisateur doit être loguée avec date, heure, nature de l’action."],
+  ["Numérotation continue", "La numérotation des pièces doit être continue sans rupture, format paramétrable."],
+  ["Signature électronique", "La signature électronique qualifiée est recommandée pour les envois vers les PDP."],
+  ["Archivage des annexes", "Les pièces jointes (devis, bons, etc.) doivent être associées à la facture et archivées."],
+  ["Mentions obligatoires facture (papier/électronique)", "La facture doit contenir les mentions légales prévues par l’article 242 nonies A du CGI."],
+  ["Respect format structuré Factur-X/UBL", "Le fichier transmis doit respecter le profil minimum (BASIC WL ou CIUS-FR). Réf. EN 16931."],
+  ["Lien facture avec documents source", "Les références aux documents d’origine doivent être présentes : devis, commande (BT-17, BT-18)."],
+  ["Journalisation émission + transmission", "L’émission et la transmission doivent être enregistrées dans un journal d’audit sécurisé."],
+  ["Gestion des accusés PDP et rejets", "Les statuts ‘déposée’, ‘rejetée’, ‘acceptée’ doivent être journalisés avec réponse PDP."],
+  ["Archivage probant chaîné", "Les factures archivées doivent être chaînées entre elles ou signées individuellement."],
+  ["Mise à jour CDAR", "Le SI doit pouvoir synchroniser les statuts CDAR (Cycle De Vie) avec les retours PDP."],
+  ["Transmission conforme CIUS/CTC-FR", "Le format transmis doit respecter les spécifications CTC-FR ou CIUS-FR."],
+  ["Traçabilité multi-PDP", "Le système doit router les factures vers la bonne PDP selon identifiant client (SIRET, PEPPOL ID)."],
+  ["Réconciliation livraisons/statuts", "Le SI doit rapprocher les transmissions envoyées avec les statuts de réception."]
+];
+
+const lang = (localStorage.getItem('langue') || 'fr');
+const exigences = exigences_traduites[lang];
+const qform = document.getElementById("questionnaire");
+qform.innerHTML = '';
+exigences.forEach((e, i) => {
+  const bloc = document.createElement("div");
+  bloc.className = "question-block";
+  bloc.innerHTML = `<h2>${i + 1}. ${e[0]}</h2>
+    <div class="attendu">${e[1]}</div>
+    <label for="rep${i}">${lang === 'fr' ? 'Réponse' : 'Answer'}</label>
+    <textarea id="rep${i}"></textarea>
+    <label for="preuve${i}">${lang === 'fr' ? 'Preuve' : 'Evidence'}</label>
+    <textarea id="preuve${i}"></textarea>
+    <label for="conf${i}">${lang === 'fr' ? 'Conformité' : 'Compliance'}</label>
+    <select id="conf${i}">
+      <option value="">-- ${lang === 'fr' ? 'Choisir' : 'Select'} --</option>
+      <option value="✅ Conforme">${langues[lang].conforme}</option>
+      <option value="❌ Non Conforme">${langues[lang].nonConforme}</option>
+      <option value="⚠️ Partiellement Conforme">${langues[lang].partiel}</option>
+    </select>`;
+  qform.appendChild(bloc);
+});
+});
+</script>
+</div>
+
+<button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
+
+<script>
+async function changerLangue(val) {
+  localStorage.setItem('langue', val);
+  location.reload();
+}
+
+function genererPDF() {
+  const doc = new window.jspdf.jsPDF();
+  let y = 10;
+  let conforme = 0, nonConforme = 0, partiel = 0;
+  doc.setFontSize(14);
+  doc.text("Rapport d'Audit – D2F Compliant d.o.o", 105, y, null, null, "center");
+  y += 10;
+  doc.setFontSize(10);
+
+  const inputs = document.querySelectorAll('.identite input, .identite textarea');
+  inputs.forEach(el => {
+    if (el.previousElementSibling) {
+      doc.text(`${el.previousElementSibling.innerText} ${el.value}`, 10, y);
+      y += 6;
+    }
+  });
+
+  document.querySelectorAll('.question-block').forEach((block, i) => {
+    const titre = block.querySelector('h2')?.innerText;
+    const attendu = block.querySelector('.attendu')?.innerText;
+    const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
+    const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
+    const conf = block.querySelector('select')?.value;
+
+    if (conf.includes("Conforme")) conforme++;
+    else if (conf.includes("Non Conforme")) nonConforme++;
+    else if (conf.includes("Partiellement")) partiel++;
+
+    doc.setFont(undefined, 'bold');
+    doc.text(titre || `Exigence ${i+1}`, 10, y); y += 5;
+    doc.setFont(undefined, 'normal');
+    if (attendu) doc.text($1, 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    doc.text("Réponse : " + (reponse || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    doc.text("Preuve : " + (preuve || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    doc.text("Conformité : " + (conf || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 8;
+    if (y > 270) { doc.addPage(); y = 10; }
+  });
+
+  doc.addPage();
+  y = 10;
+  doc.setFontSize(12);
+  doc.text("📊 Synthèse de conformité", 10, y); y += 8;
+  doc.setFontSize(10);
+  doc.text(`✅ Conforme : ${conforme}`, 10, y); y += 5;
+  doc.text(`❌ Non Conforme : ${nonConforme}`, 10, y); y += 5;
+  doc.text(`⚠️ Partiellement Conforme : ${partiel}`, 10, y); y += 8;
+
+  doc.setFontSize(10);
+  doc.text("📌 Recommandations générales :", 10, y); y += 6;
+  doc.text("- Documenter toute non-conformité détectée.", 10, y); y += 5;
+  doc.text("- Planifier une revue régulière du système de facturation.", 10, y); y += 5;
+  doc.text("- Vérifier la synchronisation avec les obligations PDP.", 10, y); y += 5;
+  doc.text("- Maintenir les journaux en accès protégé.", 10, y); y += 5;
+
+  const horo = new Date().toISOString();
+doc.setFontSize(10);
+doc.text(`🧮 Note finale : ${((conforme / 30) * 20).toFixed(1)} / 20`, 10, y); y += 6;
+doc.setFontSize(8);
+doc.text(langues[lang].horodatage + horo, 10, y);
+  const logo = new Image();
+logo.src = '/mnt/data/Image1.jpg';
+logo.onload = function() {
+  doc.addImage(logo, 'JPEG', 150, y - 20, 40, 20);
+  doc.save("rapport_audit_d2f.pdf");
+};
+}
+}
+</script>
+
+<!-- ⚠️ RÉINSERTION AUTOMATIQUE DES 30 BLOCS DE QUESTIONS ICI SERA FAITE DANS LA PROCHAINE ÉTAPE -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const langues = {
+  fr: {
+    conforme: "✅ Conforme",
+    nonConforme: "❌ Non Conforme",
+    partiel: "⚠️ Partiellement Conforme",
+    exporter: "📄 Exporter le rapport PDF",
+    horodatage: "Horodatage : "
+  },
+  en: {
+    conforme: "✅ Compliant",
+    nonConforme: "❌ Non-Compliant",
+    partiel: "⚠️ Partially Compliant",
+    exporter: "📄 Export PDF Report",
+    horodatage: "Timestamp: "
+  }
+};
+
+const lang = (localStorage.getItem('langue') || 'fr');
+function genererPDF() {
+  const doc = new window.jspdf.jsPDF();
+  let y = 10;
+  doc.setFontSize(14);
+  doc.text("Rapport d'Audit – D2F Compliant d.o.o", 105, y, null, null, "center");
+  y += 10;
+  doc.setFontSize(10);
+
+  const inputs = document.querySelectorAll('.identite input, .identite textarea');
+  inputs.forEach(el => {
+    if (el.previousElementSibling) {
+      doc.text(`${el.previousElementSibling.innerText} ${el.value}`, 10, y);
+      y += 6;
+    }
+  });
+
+  document.querySelectorAll('.question-block').forEach((block, i) => {
+    const titre = block.querySelector('h2')?.innerText;
+    const attendu = block.querySelector('.attendu')?.innerText;
+    const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
+    const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
+    const conf = block.querySelector('select')?.value;
+
+    doc.setFont(undefined, 'bold');
+    doc.text(titre || `Exigence ${i+1}`, 10, y); y += 5;
+    doc.setFont(undefined, 'normal');
+    if (attendu) doc.text(attendu, 10, y); y += 5;
+    doc.text("Réponse : " + (reponse || ""), 10, y); y += 5;
+    doc.text("Preuve : " + (preuve || ""), 10, y); y += 5;
+    doc.text("Conformité : " + (conf || ""), 10, y); y += 8;
+    if (y > 270) { doc.addPage(); y = 10; }
+  });
+
+  const horo = new Date().toISOString();
+  doc.setFontSize(8);
+  doc.text(langues[lang].horodatage + horo, 10, y);
+  doc.save("rapport_audit_d2f.pdf");
+}
+</script>
 </body>
 </html>
