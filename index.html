@@ -172,7 +172,8 @@ function reinitialiserFormulaire() {
 }
 
 function genererPDF() {
-  const doc = new window.jspdf.jsPDF();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
   let y = 10;
   let conforme = 0, nonConforme = 0, partiel = 0;
   doc.setFontSize(14);
