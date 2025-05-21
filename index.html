@@ -109,35 +109,69 @@ exigences.forEach((e, i) => {
 async function genererPDF() {
   const doc = new window.jspdf.jsPDF();
   let y = 10;
+  let conforme = 0, nonConforme = 0, partiel = 0;
   doc.setFontSize(14);
   doc.text("Rapport d'Audit – D2F Compliant d.o.o", 105, y, null, null, "center");
   y += 10;
   doc.setFontSize(10);
-  doc.text("Société : " + document.getElementById("societe").value, 10, y); y += 6;
-  doc.text("Adresse : " + document.getElementById("adresse").value, 10, y); y += 6;
-  doc.text("Participants : " + document.getElementById("participants").value, 10, y); y += 8;
 
-  for (let i = 0; i < 30; i++) {
-    const titre = exigences[i][0];
-    const attendu = exigences[i][1];
-    const rep = document.getElementById("rep" + i).value;
-    const preuve = document.getElementById("preuve" + i).value;
-    const conf = document.getElementById("conf" + i).value;
+  const inputs = document.querySelectorAll('.identite input, .identite textarea');
+  inputs.forEach(el => {
+    if (el.previousElementSibling) {
+      doc.text(`${el.previousElementSibling.innerText} ${el.value}`, 10, y);
+      y += 6;
+    }
+  });
+
+  document.querySelectorAll('.question-block').forEach((block, i) => {
+    const titre = block.querySelector('h2')?.innerText;
+    const attendu = block.querySelector('.attendu')?.innerText;
+    const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
+    const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
+    const conf = block.querySelector('select')?.value;
+
+    if (conf.includes("Conforme")) conforme++;
+    else if (conf.includes("Non Conforme")) nonConforme++;
+    else if (conf.includes("Partiellement")) partiel++;
 
     doc.setFont(undefined, 'bold');
-    doc.text(`${i + 1}. ${titre}`, 10, y); y += 5;
+    doc.text(titre || `Exigence ${i+1}`, 10, y); y += 5;
     doc.setFont(undefined, 'normal');
-    doc.text("Attendu : " + attendu, 10, y); y += 5;
-    doc.text("Réponse : " + rep, 10, y); y += 5;
-    doc.text("Preuve : " + preuve, 10, y); y += 5;
-    doc.text("Conformité : " + conf, 10, y); y += 8;
+    if (attendu) doc.text(attendu, 10, y); y += 5;
+    doc.text("Réponse : " + (reponse || ""), 10, y); y += 5;
+    doc.text("Preuve : " + (preuve || ""), 10, y); y += 5;
+    doc.text("Conformité : " + (conf || ""), 10, y); y += 8;
     if (y > 270) { doc.addPage(); y = 10; }
-  }
+  });
+
+  doc.addPage();
+  y = 10;
+  doc.setFontSize(12);
+  doc.text("📊 Synthèse de conformité", 10, y); y += 8;
+  doc.setFontSize(10);
+  doc.text(`✅ Conforme : ${conforme}`, 10, y); y += 5;
+  doc.text(`❌ Non Conforme : ${nonConforme}`, 10, y); y += 5;
+  doc.text(`⚠️ Partiellement Conforme : ${partiel}`, 10, y); y += 8;
+
+  doc.setFontSize(10);
+  doc.text("📌 Recommandations générales :", 10, y); y += 6;
+  doc.text("- Documenter toute non-conformité détectée.", 10, y); y += 5;
+  doc.text("- Planifier une revue régulière du système de facturation.", 10, y); y += 5;
+  doc.text("- Vérifier la synchronisation avec les obligations PDP.", 10, y); y += 5;
+  doc.text("- Maintenir les journaux en accès protégé.", 10, y); y += 5;
 
   const horo = new Date().toISOString();
-  doc.setFontSize(8);
-  doc.text("Horodatage : " + horo, 10, y);
+doc.setFontSize(10);
+doc.text(`🧮 Note finale : ${((conforme / 30) * 20).toFixed(1)} / 20`, 10, y); y += 6;
+doc.setFontSize(8);
+doc.text(langues[lang].horodatage + horo, 10, y);
+  const logo = new Image();
+logo.src = '/mnt/data/Image1.jpg';
+logo.onload = function() {
+  doc.addImage(logo, 'JPEG', 150, y - 20, 40, 20);
   doc.save("rapport_audit_d2f.pdf");
+};
+}
 }
 </script>
 
