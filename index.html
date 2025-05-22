@@ -87,15 +87,18 @@ Entrez le mot de passe d’accès :");
   if (!autorise) throw new Error("Accès refusé");
 </script>
 <script>
-  window.onload = function () {
+  const autorise = (() => {
     const mdp = prompt("🔒 Authentification requise
 Entrez le mot de passe d’accès :");
     if (mdp !== "d2f2024") {
-      document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
-      throw new Error("Authentification échouée");
+      document.write("<h1 style='color:red'>⛔ Accès refusé</h1>");
+      return false;
     }
-  };
+    return true;
+  })();
+  if (!autorise) throw new Error("Accès refusé");
 </script>
+
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
 <select id="langSwitch" onchange="changerLangue(this.value)">
@@ -113,7 +116,7 @@ Entrez le mot de passe d’accès :");
   <textarea id="participants"></textarea>
 </div>
 <div id="questionnaire"></div>
-
+<button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
 <button onclick="genererDOCX()">📝 Exporter le rapport Word</button>
 <button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
 <p id="msgReset" style="color: green; font-weight: bold;"></p>
