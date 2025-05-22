@@ -28,6 +28,15 @@
     }
   </style>
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  if (!window.docx) {
+    console.error("❌ La bibliothèque docx.js n'est pas chargée correctement.");
+  } else {
+    console.log("✅ docx.js est chargé et prêt à l'emploi.");
+  }
+});
+</script>
 </head>
 <body>
 <script>
@@ -282,6 +291,7 @@ function genererPDF() {
 </script>
 <script>
 async function genererDOCX() {
+  console.log("📤 Début génération DOCX...");
   const { Document, Packer, Paragraph, TextRun, Media } = window.docx;
 
   const doc = new Document();
