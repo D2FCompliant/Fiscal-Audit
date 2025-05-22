@@ -5,7 +5,9 @@
   <meta charset="UTF-8">
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">async function genererDOCX() {
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+async function genererDOCX() {
   const { Document, Packer, Paragraph, TextRun } = window.docx;
 
   const doc = new Document();
