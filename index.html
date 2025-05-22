@@ -34,6 +34,7 @@
   <option value="fr">Français</option>
   <option value="en">English</option>
 </select>
+<script>document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";</script>
 <div class="identite">
   <h2>🧾 Informations sur l'entité auditée</h2>
   <label for="societe">Nom de la société</label>
