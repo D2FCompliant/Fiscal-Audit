@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script>
+    const mdp = prompt("🔒 Authentification requise
+Entrez le mot de passe d’accès :");
+    if (mdp !== "d2f2024") {
+      document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
+      throw new Error("Authentification échouée");
+    }
+  </script>
   <meta charset="UTF-8">
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -51,16 +59,16 @@
 <script>
 const langues = {
   fr: {
-    conforme: "✅ Conforme",
-    nonConforme: "❌ Non Conforme",
-    partiel: "⚠️ Partiellement Conforme",
+    conforme: "✔ Conforme",
+    nonConforme: "✘ Non Conforme",
+    partiel: "! Partiellement Conforme",
     exporter: "📄 Exporter le rapport PDF",
     horodatage: "Horodatage : "
   },
   en: {
-    conforme: "✅ Compliant",
-    nonConforme: "❌ Non-Compliant",
-    partiel: "⚠️ Partially Compliant",
+    conforme: "✔ Compliant",
+    nonConforme: "✘ Non-Compliant",
+    partiel: "! Partially Compliant",
     exporter: "📄 Export PDF Report",
     horodatage: "Timestamp: "
   }
