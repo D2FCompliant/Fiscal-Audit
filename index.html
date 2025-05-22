@@ -8,13 +8,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
   <script>
-<script>
 async function genererDOCX() {
-  const { Document, Packer, Paragraph, TextRun } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, Media } = window.docx;
 
   const doc = new Document();
   const content = [];
 
+  // Informations principales
   const societe = document.getElementById("societe").value;
   const adresse = document.getElementById("adresse").value;
   const participants = document.getElementById("participants").value;
@@ -29,20 +29,32 @@ async function genererDOCX() {
     new Paragraph(" ")
   );
 
-  const blocs = document.querySelectorAll(".question-block");
-  blocs.forEach((block, i) => {
+  // Parcours de chaque bloc question
+  document.querySelectorAll(".question-block").forEach((block, i) => {
     const titre = block.querySelector("h2")?.innerText;
     const attendu = block.querySelector(".attendu")?.innerText;
-    const reponse = block.querySelector("textarea")?.value;
+    const reponse = block.querySelector("textarea:nth-of-type(1)")?.value || "";
+    const preuve = block.querySelector("textarea:nth-of-type(2)")?.value || "";
     const conf = block.querySelector("select")?.value || "";
+    const dropzone = block.querySelector(".dropzone");
+    const imageData = dropzone?.dataset.image;
 
     content.push(
       new Paragraph({ text: `${i + 1}. ${titre}`, heading: "HEADING_2" }),
       new Paragraph("📌 Attendu : " + attendu),
       new Paragraph("🖊 Réponse : " + reponse),
-      new Paragraph("🔍 Conformité : " + conf),
-      new Paragraph(" ")
+      new Paragraph("🔎 Preuve : " + preuve),
+      new Paragraph("🔍 Conformité : " + conf)
     );
+
+    // Ajout de l'image s'il y en a une
+    if (imageData) {
+      // Conversion base64 → Uint8Array
+      const imageBuffer = base64ToArrayBuffer(imageData.split(',')[1]);
+      const image = Media.addImage(doc, imageBuffer, 200, 120);
+      content.push(new Paragraph(image));
+    }
+    content.push(new Paragraph(" "));
   });
 
   doc.addSection({ children: content });
@@ -52,6 +64,17 @@ async function genererDOCX() {
   a.href = URL.createObjectURL(blob);
   a.download = "rapport_audit_d2f.docx";
   a.click();
+
+  // Fonction de conversion Base64 vers ArrayBuffer
+  function base64ToArrayBuffer(base64) {
+    const binary_string = window.atob(base64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
 }
 </script>
   <style>
