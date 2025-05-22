@@ -92,31 +92,33 @@ const langues = {
   en: { conforme: "✔ Compliant", nonConforme: "✘ Non-Compliant", partiel: "! Partially Compliant" }
 };
 
-const exigences = exigences_traduites[lang];
-const qform = document.getElementById("questionnaire");
-qform.innerHTML = '';
-exigences.forEach((e, i) => {
-  const bloc = document.createElement("div");
-  bloc.className = "question-block";
-  bloc.innerHTML = `<h2>${i + 1}. ${e[0]}</h2>
-    <div class="attendu">${e[1]}</div>
-    <label>${lang === 'fr' ? 'Réponse' : 'Answer'}</label>
-    <textarea></textarea>
-    <label>${lang === 'fr' ? 'Preuve' : 'Evidence'}</label>
-    <div class="dropzone" ondrop="dropImage(event, this)" ondragover="event.preventDefault()" style="border: 2px dashed #aaa; padding: 10px; min-height: 60px; background: #f0f8ff;">${lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here'}</div>
-    <label>${lang === 'fr' ? 'Conformité' : 'Compliance'}</label>
-    <select>
-      <option value="">-- ${lang === 'fr' ? 'Choisir' : 'Select'} --</option>
-      <option value="✔ Conforme">${langues[lang].conforme}</option>
-      <option value="✘ Non Conforme">${langues[lang].nonConforme}</option>
-      <option value="! Partiellement Conforme">${langues[lang].partiel}</option>
-    </select>`;
-  qform.appendChild(bloc);
-});
+(function generateForm() {
+  const exigences = exigences_traduites[lang];
+  const qform = document.getElementById("questionnaire");
+  qform.innerHTML = '';
+  exigences.forEach((e, i) => {
+    const bloc = document.createElement("div");
+    bloc.className = "question-block";
+    bloc.innerHTML = `<h2>${i + 1}. ${e[0]}</h2>
+      <div class="attendu">${e[1]}</div>
+      <label>${lang === 'fr' ? 'Réponse' : 'Answer'}</label>
+      <textarea></textarea>
+      <label>${lang === 'fr' ? 'Preuve' : 'Evidence'}</label>
+      <div class="dropzone" ondrop="dropImage(event, this)" ondragover="event.preventDefault()" style="border: 2px dashed #aaa; padding: 10px; min-height: 60px; background: #f0f8ff;">${lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here'}</div>
+      <label>${lang === 'fr' ? 'Conformité' : 'Compliance'}</label>
+      <select>
+        <option value="">-- ${lang === 'fr' ? 'Choisir' : 'Select'} --</option>
+        <option value="✔ Conforme">${langues[lang].conforme}</option>
+        <option value="✘ Non Conforme">${langues[lang].nonConforme}</option>
+        <option value="! Partiellement Conforme">${langues[lang].partiel}</option>
+      </select>`;
+    qform.appendChild(bloc);
+  });
+})();
 </script>
 <script>
 async function genererDOCX() {
-  const { Document, Packer, Paragraph, TextRun } = window.docx;
+  const { Document, Packer, Paragraph, TextRun, Media } = window.docx;
   console.log("📤 Début génération DOCX...");
 
   const doc = new Document();
@@ -139,34 +141,34 @@ async function genererDOCX() {
   document.querySelectorAll(".question-block").forEach((block, i) => {
     const titre = block.querySelector("h2")?.innerText;
     const attendu = block.querySelector(".attendu")?.innerText;
-    const reponse = block.querySelector("textarea:nth-of-type(1)")?.value || "";
-    const preuve = block.querySelector("textarea:nth-of-type(2)")?.value || "";
+    const reponse = block.querySelector("textarea")?.value || "";
     const conf = block.querySelector("select")?.value || "";
-    const imageData = block.querySelector(".dropzone")?.dataset.image;
+    const dropzone = block.querySelector(".dropzone");
+    const imageData = dropzone?.dataset.image;
 
     content.push(
       new Paragraph({ text: `${i + 1}. ${titre}`, heading: "HEADING_2" }),
       new Paragraph("📌 Attendu : " + attendu),
       new Paragraph("🖊 Réponse : " + reponse),
-      new Paragraph("📎 Preuve : " + preuve),
-      new Paragraph("🔍 Conformité : " + conf),
-      ...(imageData ? [
-        new Paragraph({
-          children: [
-            new TextRun({ text: "🖼️ Preuve image :", bold: true }),
-          ]
-        }),
-        new Paragraph({
-          children: [
-            docx.Media.addImage(doc, base64ToArrayBuffer(imageData.split(',')[1]), 200, 100)
-          ]
-        })
-      ] : []),
-      new Paragraph(" ")
+      new Paragraph("🔍 Conformité : " + conf)
     );
+
+    if (imageData) {
+      const imageBuffer = base64ToArrayBuffer(imageData.split(',')[1]);
+      const image = Media.addImage(doc, imageBuffer, 200, 100);
+      content.push(image);
+    }
+
+    content.push(new Paragraph(" "));
   });
 
   doc.addSection({ children: content });
+
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "rapport_audit_d2f.docx";
+  a.click();
 
   function base64ToArrayBuffer(base64) {
     const binary_string = window.atob(base64);
@@ -177,23 +179,6 @@ async function genererDOCX() {
     }
     return bytes.buffer;
   }
-
-  const blob = await Packer.toBlob(doc);
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "rapport_audit_d2f.docx";
-  a.click();
-}
-function dropImage(event, zone) {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  if (!file.type.startsWith('image/')) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    zone.innerHTML = `<img src="${e.target.result}" style="max-width:100px;">`;
-    zone.dataset.image = e.target.result;
-  };
-  reader.readAsDataURL(file);
 }
 </script>
 </body>
