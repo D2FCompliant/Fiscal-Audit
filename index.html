@@ -217,15 +217,23 @@ function genererPDF() {
     doc.setFont(undefined, 'bold');
     doc.text(titre || `Exigence ${i+1}`, 10, y); y += 5;
     doc.setFont(undefined, 'normal');
-    if (attendu) doc.text(attendu, 10, y, { maxWidth: 180, align: 'left' }); y += 5;
-    doc.text("Réponse : " + (reponse || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 5;
+    if (attendu) {
+      const blocAttendu = doc.splitTextToSize(attendu, 180);
+      doc.text(blocAttendu, 10, y);
+      y += blocAttendu.length * 5;
+    } y += 5;
+    const blocReponse = doc.splitTextToSize("Réponse : " + (reponse || ""), 180);
+    doc.text(blocReponse, 10, y);
+    y += blocReponse.length * 5; y += 5;
     if (imageData) {
       doc.addImage(imageData, 'JPEG', 10, y, 40, 30);
       y += 35;
     } else {
       doc.text("Preuve : (aucune image)", 10, y); y += 5;
     } y += 5;
-    doc.text("Conformité : " + (conf || ""), 10, y, { maxWidth: 180, align: 'left' }); y += 8;
+    const blocConf = doc.splitTextToSize("Conformité : " + (conf || ""), 180);
+    doc.text(blocConf, 10, y);
+    y += blocConf.length * 5; y += 8;
     if (y > 270) { doc.addPage(); y = 10; }
   });
 
@@ -249,7 +257,7 @@ function genererPDF() {
   doc.text(langues[lang].horodatage + new Date().toISOString(), 10, y);
 
   const logo = new Image();
-  logo.src = 'https://raw.githubusercontent.com/d2fcompliant/d2fcompliant-audit-interface/main/logo.jpg';
+  logo.src = 'https://d2fcompliant.github.io/d2fcompliant-audit-interface/logo.jpg';
   logo.onload = function() {
     doc.addImage(logo, 'JPEG', 150, y - 20, 40, 20);
     doc.save("rapport_audit_d2f.pdf");
