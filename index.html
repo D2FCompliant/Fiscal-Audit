@@ -5,7 +5,51 @@
   <meta charset="UTF-8">
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">async function genererDOCX() {
+  const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+  const doc = new Document();
+  const content = [];
+
+  const societe = document.getElementById("societe").value;
+  const adresse = document.getElementById("adresse").value;
+  const participants = document.getElementById("participants").value;
+
+  content.push(
+    new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit – D2F Compliant", bold: true, size: 28 })] }),
+    new Paragraph(" "),
+    new Paragraph("🧾 Nom de la société : " + societe),
+    new Paragraph("📍 Adresse : " + adresse),
+    new Paragraph("👥 Participants : " + participants),
+    new Paragraph("📅 Date : " + new Date().toLocaleString()),
+    new Paragraph(" ")
+  );
+
+  const blocs = document.querySelectorAll(".question-block");
+  blocs.forEach((block, i) => {
+    const titre = block.querySelector("h2")?.innerText;
+    const attendu = block.querySelector(".attendu")?.innerText;
+    const reponse = block.querySelector("textarea")?.value;
+    const conf = block.querySelector("select")?.value || "";
+
+    content.push(
+      new Paragraph({ text: `${i + 1}. ${titre}`, heading: "HEADING_2" }),
+      new Paragraph("📌 Attendu : " + attendu),
+      new Paragraph("🖊 Réponse : " + reponse),
+      new Paragraph("🔍 Conformité : " + conf),
+      new Paragraph(" ")
+    );
+  });
+
+  doc.addSection({ children: content });
+
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "rapport_audit_d2f.docx";
+  a.click();
+}
+</script>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background-color: #f9f9f9; }
     h1, h2 { color: #222; }
@@ -27,6 +71,7 @@
       padding: 0.5em; margin-top: 0.5em; border-left: 4px solid #88a;
     }
   </style>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 </head>
 <body>
 <script>
@@ -68,7 +113,8 @@ Entrez le mot de passe d’accès :");
   <textarea id="participants"></textarea>
 </div>
 <div id="questionnaire"></div>
-<button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
+
+<button onclick="genererDOCX()">📝 Exporter le rapport Word</button>
 <button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
 <p id="msgReset" style="color: green; font-weight: bold;"></p>
 <script>
