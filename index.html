@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <script>
-    const mdp = prompt("🔒 Authentification requise
-Entrez le mot de passe d’accès :");
-    if (mdp !== "d2f2024") {
-      document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
-      throw new Error("Authentification échouée");
-    }
-  </script>
+  
   <meta charset="UTF-8">
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -36,6 +29,14 @@ Entrez le mot de passe d’accès :");
   </style>
 </head>
 <body>
+<script>
+  const mdp = prompt("🔒 Authentification requise
+Entrez le mot de passe d’accès :");
+  if (mdp !== "d2f2024") {
+    document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
+    throw new Error("Authentification échouée");
+  }
+</script>
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
 <select id="langSwitch" onchange="changerLangue(this.value)">
