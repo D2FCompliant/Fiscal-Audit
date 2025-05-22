@@ -6,6 +6,8 @@
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  <script>
 <script>
 async function genererDOCX() {
   const { Document, Packer, Paragraph, TextRun } = window.docx;
@@ -73,7 +75,6 @@ async function genererDOCX() {
       padding: 0.5em; margin-top: 0.5em; border-left: 4px solid #88a;
     }
   </style>
-<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 </head>
 <body>
 <script>
