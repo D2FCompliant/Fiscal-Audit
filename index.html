@@ -29,14 +29,6 @@
   </style>
 </head>
 <body>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const selectLangue = document.getElementById("langSwitch");
-  const storedLang = localStorage.getItem("langue") || "fr";
-  selectLangue.value = storedLang;
-  genererFormulaire();
-});
-</script>
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
 <select id="langSwitch" onchange="changerLangue(this.value)">
