@@ -29,84 +29,20 @@
   </style>
 </head>
 <body>
-
-
+<script>
+const mdp = prompt("🔒 Authentification requise\nEntrez le mot de passe d’accès :");
+if (mdp !== "d2f2024") {
+  document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
+  throw new Error("Accès refusé");
+}
+</script>
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
 <select id="langSwitch" onchange="changerLangue(this.value)">
   <option value="fr">Français</option>
   <option value="en">English</option>
 </select>
-<script>
-document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";
-
-function genererFormulaire() {
-  const lang = localStorage.getItem("langue") || 'fr';
-  const exigences = exigences_traduites[lang];
-  const qform = document.getElementById("questionnaire");
-  qform.innerHTML = '';
-  exigences.forEach((e, i) => {
-    const bloc = document.createElement("div");
-    bloc.className = "question-block";
-    const h2 = document.createElement("h2");
-    h2.textContent = `${i + 1}. ${e[0]}`;
-    bloc.appendChild(h2);
-    const attendu = document.createElement("div");
-    attendu.className = "attendu";
-    attendu.textContent = e[1];
-    bloc.appendChild(attendu);
-    const label1 = document.createElement("label");
-    label1.textContent = lang === 'fr' ? 'Réponse' : 'Answer';
-    bloc.appendChild(label1);
-    const textarea1 = document.createElement("textarea");
-    bloc.appendChild(textarea1);
-    const label2 = document.createElement("label");
-    label2.textContent = lang === 'fr' ? 'Preuve' : 'Evidence';
-    bloc.appendChild(label2);
-    const textarea2 = document.createElement("textarea");
-    bloc.appendChild(textarea2);
-    const drop = document.createElement("div");
-    drop.className = "dropzone";
-    drop.style.border = "2px dashed #aaa";
-    drop.style.padding = "10px";
-    drop.style.minHeight = "60px";
-    drop.style.background = "#f0f8ff";
-    drop.textContent = lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
-    drop.ondrop = function(event) {
-      event.preventDefault();
-      const file = event.dataTransfer.files[0];
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        drop.innerHTML = "";
-        const img = document.createElement("img");
-        img.src = e.target.result;
-        img.style.maxWidth = "100px";
-        drop.appendChild(img);
-        drop.dataset.image = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-    drop.ondragover = function(event) { event.preventDefault(); };
-    bloc.appendChild(drop);
-    const label3 = document.createElement("label");
-    label3.textContent = lang === 'fr' ? 'Conformité' : 'Compliance';
-    bloc.appendChild(label3);
-    const select = document.createElement("select");
-    ["", "✅ Conforme", "❌ Non Conforme", "⚠️ Partiellement Conforme"].forEach(opt => {
-      const o = document.createElement("option");
-      o.value = opt;
-      o.textContent = opt;
-      select.appendChild(o);
-    });
-    bloc.appendChild(select);
-    qform.appendChild(bloc);
-  });
-}
-
-// Appelé après déclaration complète des variables
-</script>
-
+<p id="msgReset" style="color: green; font-weight: bold;"></p>
 <div class="identite">
   <h2>🧾 Informations sur l'entité auditée</h2>
   <label for="societe">Nom de la société</label>
@@ -116,15 +52,12 @@ function genererFormulaire() {
   <label for="participants">Participants</label>
   <textarea id="participants"></textarea>
 </div>
-
 <div id="questionnaire"></div>
 <button onclick="genererDOCX()">📝 Exporter le rapport Word</button>
 <button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
 <button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
-<p id="msgReset" style="color: green; font-weight: bold;"></p>
 <button onclick="sauvegarderFormulaire()">💾 Sauvegarder</button>
 <button onclick="restaurerFormulaire()">🔁 Restaurer</button>
-
 <script>
 const exigences_traduites = {
   fr: [
@@ -192,115 +125,80 @@ const exigences_traduites = {
     ["Delivery status reconciliation", "The system must reconcile transmitted invoices with their delivery statuses."]
   ]
 };
-function reinitialiserFormulaire() {
-  document.querySelectorAll('.question-block').forEach(block => {
-    block.querySelectorAll('textarea').forEach(t => t.value = "");
-    const sel = block.querySelector('select');
-    if (sel) sel.value = "";
-    const drop = block.querySelector('.dropzone');
-    if (drop) {
-      drop.innerHTML = lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
-      delete drop.dataset.image;
-    }
-  });
-  const msg = document.getElementById('msgReset');
-  msg.textContent = '✔️ ' + (lang === 'fr' ? 'Formulaire réinitialisé' : 'Form reset');
-  setTimeout(() => msg.textContent = '', 3000);
+
+function changerLangue(val) {
+  localStorage.setItem('langue', val);
+  location.reload();
 }
 
-function genererPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  let y = 10;
-  let conforme = 0, nonConforme = 0, partiel = 0;
-  doc.setFontSize(14);
-  doc.text("Rapport d'Audit – D2F Compliant", 105, y, null, null, "center");
-  y += 10;
-  doc.setFontSize(10);
-
-  const inputs = document.querySelectorAll('.identite input, .identite textarea');
-  inputs.forEach(el => {
-    if (el.previousElementSibling) {
-      doc.text(el.previousElementSibling.innerText + ' ' + el.value, 10, y);
-      y += 6;
-    }
+function genererFormulaire() {
+  window.lang = localStorage.getItem("langue") || 'fr';
+  const exigences = exigences_traduites[window.lang];
+  const qform = document.getElementById("questionnaire");
+  qform.innerHTML = '';
+  exigences.forEach((e, i) => {
+    const bloc = document.createElement("div");
+    bloc.className = "question-block";
+    const h2 = document.createElement("h2");
+    h2.textContent = `${i + 1}. ${e[0]}`;
+    bloc.appendChild(h2);
+    const attendu = document.createElement("div");
+    attendu.className = "attendu";
+    attendu.textContent = e[1];
+    bloc.appendChild(attendu);
+    const label1 = document.createElement("label");
+    label1.textContent = window.lang === 'fr' ? 'Réponse' : 'Answer';
+    bloc.appendChild(label1);
+    const textarea1 = document.createElement("textarea");
+    bloc.appendChild(textarea1);
+    const label2 = document.createElement("label");
+    label2.textContent = window.lang === 'fr' ? 'Preuve' : 'Evidence';
+    bloc.appendChild(label2);
+    const textarea2 = document.createElement("textarea");
+    bloc.appendChild(textarea2);
+    const drop = document.createElement("div");
+    drop.className = "dropzone";
+    drop.style.border = "2px dashed #aaa";
+    drop.style.padding = "10px";
+    drop.style.minHeight = "60px";
+    drop.style.background = "#f0f8ff";
+    drop.textContent = window.lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
+    drop.ondrop = function(event) {
+      event.preventDefault();
+      const file = event.dataTransfer.files[0];
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        drop.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.maxWidth = "100px";
+        drop.appendChild(img);
+        drop.dataset.image = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+    drop.ondragover = function(event) { event.preventDefault(); };
+    bloc.appendChild(drop);
+    const label3 = document.createElement("label");
+    label3.textContent = window.lang === 'fr' ? 'Conformité' : 'Compliance';
+    bloc.appendChild(label3);
+    const select = document.createElement("select");
+    ["", "✅ Conforme", "❌ Non Conforme", "⚠️ Partiellement Conforme"].forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = opt;
+      select.appendChild(o);
+    });
+    bloc.appendChild(select);
+    qform.appendChild(bloc);
   });
-
-  document.querySelectorAll('.question-block').forEach((block, i) => {
-    const titre = block.querySelector('h2')?.innerText;
-    const attendu = block.querySelector('.attendu')?.innerText;
-    const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
-    const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
-    const conf = block.querySelector('select')?.value;
-    const imageData = block.querySelector('.dropzone')?.dataset.image;
-
-    if (conf.includes("Conforme")) conforme++;
-    else if (conf.includes("Non Conforme")) nonConforme++;
-    else if (conf.includes("Partiellement")) partiel++;
-
-    doc.setFont(undefined, 'bold');
-    doc.text(titre || `Exigence ${i + 1}`, 10, y);
-    y += 5;
-    doc.setFont(undefined, 'normal');
-    if (attendu) {
-      const blocAttendu = doc.splitTextToSize(attendu, 180);
-      doc.text(blocAttendu, 10, y);
-      y += blocAttendu.length * 5;
-    }
-    y += 5;
-    const blocReponse = doc.splitTextToSize("Réponse : " + (reponse || ""), 180);
-    doc.text(blocReponse, 10, y);
-    y += blocReponse.length * 5;
-    y += 5;
-    if (imageData) {
-      doc.addImage(imageData, 'JPEG', 10, y, 40, 30);
-      y += 35;
-    } else {
-      doc.text("Preuve : (aucune image)", 10, y);
-      y += 5;
-    }
-    y += 5;
-    const blocConf = doc.splitTextToSize("Conformité : " + (conf || ""), 180);
-    doc.text(blocConf, 10, y);
-    y += blocConf.length * 5;
-    y += 8;
-    if (y > 270) {
-      doc.addPage();
-      y = 10;
-    }
-  });
-
-  doc.addPage();
-  y = 10;
-  doc.setFontSize(12);
-  doc.text("📊 Synthèse de conformité", 10, y);
-  y += 8;
-  doc.setFontSize(10);
-  doc.text("✅ Conforme : " + conforme, 10, y);
-  y += 5;
-  doc.text("❌ Non Conforme : " + nonConforme, 10, y);
-  y += 5;
-  doc.text("⚠️ Partiellement Conforme : " + partiel, 10, y);
-  y += 8;
-
-  doc.text("📌 Recommandations générales :", 10, y);
-  y += 6;
-  doc.text("- Documenter toute non-conformité détectée.", 10, y);
-  y += 5;
-  doc.text("- Planifier une revue régulière du système de facturation.", 10, y);
-  y += 5;
-  doc.text("- Vérifier la synchronisation avec les obligations PDP.", 10, y);
-  y += 5;
-  doc.text("- Maintenir les journaux en accès protégé.", 10, y);
-  y += 5;
-
-  doc.text("🧮 Note finale : " + ((conforme / exigences.length) * 20).toFixed(1) + " / 20", 10, y);
-  y += 6;
-  doc.setFontSize(8);
-  doc.text("Horodatage : " + new Date().toISOString(), 10, y);
-
-  doc.save("rapport_audit_d2f.pdf");
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";
+  genererFormulaire();
+});
 function sauvegarderFormulaire() {
   const data = {
     societe: document.getElementById("societe").value,
@@ -314,7 +212,7 @@ function sauvegarderFormulaire() {
     }))
   };
   localStorage.setItem("auditFormData", JSON.stringify(data));
-  alert("✔️ Données sauvegardées localement.");
+  alert("✔️ Données sauvegardées");
 }
 
 function restaurerFormulaire() {
@@ -341,23 +239,97 @@ function restaurerFormulaire() {
       }
     }
   });
-  alert("🔁 Données restaurées.");
+  alert("🔁 Données restaurées");
 }
-</script>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-  // Initialisation après chargement complet
-  window.lang = localStorage.getItem("langue") || "fr";
-  document.getElementById("langSwitch").value = lang;
-  const mdp = prompt("🔒 Authentification requise
-Entrez le mot de passe d’accès :");
-  if (mdp !== "d2f2024") {
-    document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
-    throw new Error("Accès refusé");
-  }
-  genererFormulaire();
-  restaurerFormulaire();
-});
+function genererPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 10;
+  doc.setFontSize(14);
+  doc.text("Rapport d'Audit – D2F Compliant", 105, y, null, null, "center");
+  y += 10;
+  doc.setFontSize(10);
+
+  const inputs = document.querySelectorAll('.identite input, .identite textarea');
+  inputs.forEach(el => {
+    if (el.previousElementSibling) {
+      doc.text(`${el.previousElementSibling.innerText} ${el.value}`, 10, y);
+      y += 6;
+    }
+  });
+
+  document.querySelectorAll('.question-block').forEach((block, i) => {
+    const titre = block.querySelector('h2')?.innerText;
+    const attendu = block.querySelector('.attendu')?.innerText;
+    const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
+    const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
+    const conf = block.querySelector('select')?.value;
+    const imageData = block.querySelector('.dropzone')?.dataset.image;
+
+    doc.setFont(undefined, 'bold');
+    doc.text(titre || `Exigence ${i+1}`, 10, y);
+    y += 5;
+    doc.setFont(undefined, 'normal');
+    const blocAttendu = doc.splitTextToSize(attendu, 180);
+    doc.text(blocAttendu, 10, y);
+    y += blocAttendu.length * 5;
+    y += 3;
+    doc.text(doc.splitTextToSize("Réponse : " + (reponse || ""), 180), 10, y);
+    y += 5;
+    if (imageData) {
+      doc.addImage(imageData, 'JPEG', 10, y, 40, 30);
+      y += 35;
+    } else {
+      doc.text("Preuve : (aucune image)", 10, y);
+      y += 5;
+    }
+    y += 3;
+    doc.text(doc.splitTextToSize("Conformité : " + (conf || ""), 180), 10, y);
+    y += 10;
+    if (y > 270) { doc.addPage(); y = 10; }
+  });
+  doc.save("rapport_audit_d2f.pdf");
+}
+
+function genererDOCX() {
+  const { Document, Packer, Paragraph, TextRun, Media } = window.docx;
+  const doc = new Document();
+  const content = [];
+  content.push(
+    new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit – D2F Compliant", bold: true, size: 28 })] }),
+    new Paragraph(" "),
+    new Paragraph("🧾 Nom de la société : " + document.getElementById("societe").value),
+    new Paragraph("📍 Adresse : " + document.getElementById("adresse").value),
+    new Paragraph("👥 Participants : " + document.getElementById("participants").value),
+    new Paragraph("📅 Date : " + new Date().toLocaleString()),
+    new Paragraph(" ")
+  );
+
+  document.querySelectorAll(".question-block").forEach((block, i) => {
+    const titre = block.querySelector("h2")?.innerText;
+    const attendu = block.querySelector(".attendu")?.innerText;
+    const reponse = block.querySelector("textarea:nth-of-type(1)")?.value || "";
+    const preuve = block.querySelector("textarea:nth-of-type(2)")?.value || "";
+    const conf = block.querySelector("select")?.value || "";
+
+    content.push(
+      new Paragraph({ text: `${i + 1}. ${titre}`, heading: "HEADING_2" }),
+      new Paragraph("📌 Attendu : " + attendu),
+      new Paragraph("🖊 Réponse : " + reponse),
+      new Paragraph("🔎 Preuve : " + preuve),
+      new Paragraph("🔍 Conformité : " + conf),
+      new Paragraph(" ")
+    );
+  });
+
+  doc.addSection({ children: content });
+  Packer.toBlob(doc).then(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "rapport_audit_d2f.docx";
+    a.click();
+  });
+}
 </script>
 </body>
 </html>
