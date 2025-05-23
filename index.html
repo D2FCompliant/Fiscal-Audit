@@ -30,6 +30,10 @@
 </head>
 <body>
 <script>
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";
+  genererFormulaire();
+});
 </script>
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
