@@ -64,6 +64,7 @@ window.addEventListener("DOMContentLoaded", () => {
 <button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
 <p id="msgReset" style="color: green; font-weight: bold;"></p>
 <script>
+
 function creerDropzone(container) {
   const dropzone = document.createElement("div");
   dropzone.className = "dropzone";
@@ -190,6 +191,29 @@ const exigences_traduites = {
     ["Delivery status reconciliation", "The system must reconcile transmitted invoices with their delivery statuses."]
   ]
 };
+
+function ajouterQuestion(titre) {
+  const container = document.getElementById("questionnaire");
+  const bloc = document.createElement("div");
+  bloc.className = "question-block";
+  const label = document.createElement("label");
+  label.textContent = titre;
+  const textarea = document.createElement("textarea");
+  const select = document.createElement("select");
+  ["Conforme", "Non conforme", "Non applicable"].forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt;
+    option.text = opt;
+    select.appendChild(option);
+  });
+  bloc.appendChild(label);
+  bloc.appendChild(textarea);
+  bloc.appendChild(select);
+  creerDropzone(bloc);
+  container.appendChild(bloc);
+}
+
+ajouterQuestion("Exemple : L’entreprise conserve-t-elle les journaux d’accès ?");
 
 function changerLangue(val) {
   localStorage.setItem('langue', val);
