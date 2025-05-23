@@ -30,8 +30,10 @@
 </head>
 <body>
 <script>
-window.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";
+document.addEventListener("DOMContentLoaded", function () {
+  const selectLangue = document.getElementById("langSwitch");
+  const storedLang = localStorage.getItem("langue") || "fr";
+  selectLangue.value = storedLang;
   genererFormulaire();
 });
 </script>
