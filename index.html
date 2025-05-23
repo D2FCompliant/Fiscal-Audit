@@ -310,7 +310,11 @@ function genererPDF() {
 
 function genererDOCX() {
   const { Document, Packer, Paragraph, TextRun, Media } = window.docx;
-  const doc = new Document();
+  const doc = new Document({
+    creator: "D2F Compliant",
+    title: "Rapport d’Audit",
+    description: "Audit de conformité fiscal & réglementaire"
+  });
   const content = [];
   content.push(
     new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit – D2F Compliant", bold: true, size: 28 })] }),
