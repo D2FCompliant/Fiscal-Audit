@@ -347,7 +347,7 @@ function restaurerFormulaire() {
 <script>
 window.addEventListener('DOMContentLoaded', () => {
   // Initialisation après chargement complet
-  const lang = localStorage.getItem("langue") || "fr";
+  window.lang = localStorage.getItem("langue") || "fr";
   document.getElementById("langSwitch").value = lang;
   const mdp = prompt("🔒 Authentification requise
 Entrez le mot de passe d’accès :");
