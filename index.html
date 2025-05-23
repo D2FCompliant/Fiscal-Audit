@@ -6,6 +6,7 @@
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background-color: #f9f9f9; }
     h1, h2 { color: #222; }
@@ -343,6 +344,43 @@ async function genererDOCX() {
     return bytes.buffer;
   }
 }
+</script>
+  <script>
+  async function genererDOCX() {
+    const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+    const societe = document.getElementById("societe")?.value || "Nom de la société non renseigné";
+    const contenu = new Document({
+      sections: [{
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun("Rapport d’audit – D2F Compliant"),
+              new TextRun("\n\nSociété : " + societe)
+            ]
+          })
+        ]
+      }]
+    });
+
+    const blob = await Packer.toBlob(contenu);
+    const lien = document.createElement("a");
+    lien.href = URL.createObjectURL(blob);
+    lien.download = "rapport_audit.docx";
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+  }
+
+  function genererPDF() {
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF();
+    const societe = document.getElementById("societe")?.value || "Nom de la société non renseigné";
+    doc.text("Rapport d’audit – D2F Compliant", 10, 10);
+    doc.text("Société : " + societe, 10, 20);
+    doc.save("rapport_audit.pdf");
+  }
 </script>
 </body>
 </html>
