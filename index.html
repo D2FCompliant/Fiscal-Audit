@@ -164,19 +164,29 @@ function genererFormulaire() {
     drop.style.background = "#f0f8ff";
     drop.textContent = window.lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
     drop.ondrop = function(event) {
-      event.preventDefault();
-      const file = event.dataTransfer.files[0];
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        drop.innerHTML = "";
-        const img = document.createElement("img");
-        img.src = e.target.result;
-        img.style.maxWidth = "100px";
-        drop.appendChild(img);
-        drop.dataset.image = e.target.result;
-      };
-      reader.readAsDataURL(file);
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  const reader = new FileReader();
+
+  if (file.type.startsWith('image/')) {
+    reader.onload = function(e) {
+      drop.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.style.maxWidth = "100px";
+      drop.appendChild(img);
+      drop.dataset.image = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  } else if (file.type.startsWith('text/') || file.type === 'application/pdf') {
+    reader.onload = function(e) {
+      drop.textContent = e.target.result.slice(0, 500) + '...';
+      drop.dataset.text = e.target.result;
+    };
+    reader.readAsText(file);
+  } else {
+    drop.textContent = "❌ Format non supporté";
+  }
     };
     drop.ondragover = function(event) { event.preventDefault(); };
     bloc.appendChild(drop);
