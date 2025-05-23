@@ -29,17 +29,7 @@
   </style>
 </head>
 <body>
-<script>
-  const autorise = (() => {
-    const mdp = prompt("🔒 Authentification requise\nEntrez le mot de passe d’accès :");
-    if (mdp !== "d2f2024") {
-      document.write("<h1 style='color:red'>⛔ Accès refusé</h1>");
-      return false;
-    }
-    return true;
-  })();
-  if (!autorise) throw new Error("Accès refusé");
-</script>
+
 
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
@@ -50,68 +40,71 @@
 <script>
 document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";
 
-// Génération dynamique du questionnaire
-const lang = localStorage.getItem("langue") || 'fr';
-const exigences = exigences_traduites[lang];
-const qform = document.getElementById("questionnaire");
-qform.innerHTML = '';
-exigences.forEach((e, i) => {
-  const bloc = document.createElement("div");
-  bloc.className = "question-block";
-  const h2 = document.createElement("h2");
-  h2.textContent = `${i + 1}. ${e[0]}`;
-  bloc.appendChild(h2);
-  const attendu = document.createElement("div");
-  attendu.className = "attendu";
-  attendu.textContent = e[1];
-  bloc.appendChild(attendu);
-  const label1 = document.createElement("label");
-  label1.textContent = lang === 'fr' ? 'Réponse' : 'Answer';
-  bloc.appendChild(label1);
-  const textarea1 = document.createElement("textarea");
-  bloc.appendChild(textarea1);
-  const label2 = document.createElement("label");
-  label2.textContent = lang === 'fr' ? 'Preuve' : 'Evidence';
-  bloc.appendChild(label2);
-  const textarea2 = document.createElement("textarea");
-  bloc.appendChild(textarea2);
-  const drop = document.createElement("div");
-  drop.className = "dropzone";
-  drop.style.border = "2px dashed #aaa";
-  drop.style.padding = "10px";
-  drop.style.minHeight = "60px";
-  drop.style.background = "#f0f8ff";
-  drop.textContent = lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
-  drop.ondrop = function(event) {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      drop.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.style.maxWidth = "100px";
-      drop.appendChild(img);
-      drop.dataset.image = e.target.result;
+function genererFormulaire() {
+  const lang = localStorage.getItem("langue") || 'fr';
+  const exigences = exigences_traduites[lang];
+  const qform = document.getElementById("questionnaire");
+  qform.innerHTML = '';
+  exigences.forEach((e, i) => {
+    const bloc = document.createElement("div");
+    bloc.className = "question-block";
+    const h2 = document.createElement("h2");
+    h2.textContent = `${i + 1}. ${e[0]}`;
+    bloc.appendChild(h2);
+    const attendu = document.createElement("div");
+    attendu.className = "attendu";
+    attendu.textContent = e[1];
+    bloc.appendChild(attendu);
+    const label1 = document.createElement("label");
+    label1.textContent = lang === 'fr' ? 'Réponse' : 'Answer';
+    bloc.appendChild(label1);
+    const textarea1 = document.createElement("textarea");
+    bloc.appendChild(textarea1);
+    const label2 = document.createElement("label");
+    label2.textContent = lang === 'fr' ? 'Preuve' : 'Evidence';
+    bloc.appendChild(label2);
+    const textarea2 = document.createElement("textarea");
+    bloc.appendChild(textarea2);
+    const drop = document.createElement("div");
+    drop.className = "dropzone";
+    drop.style.border = "2px dashed #aaa";
+    drop.style.padding = "10px";
+    drop.style.minHeight = "60px";
+    drop.style.background = "#f0f8ff";
+    drop.textContent = lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
+    drop.ondrop = function(event) {
+      event.preventDefault();
+      const file = event.dataTransfer.files[0];
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        drop.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.maxWidth = "100px";
+        drop.appendChild(img);
+        drop.dataset.image = e.target.result;
+      };
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
-  };
-  drop.ondragover = function(event) { event.preventDefault(); };
-  bloc.appendChild(drop);
-  const label3 = document.createElement("label");
-  label3.textContent = lang === 'fr' ? 'Conformité' : 'Compliance';
-  bloc.appendChild(label3);
-  const select = document.createElement("select");
-  ["", "✅ Conforme", "❌ Non Conforme", "⚠️ Partiellement Conforme"].forEach(opt => {
-    const o = document.createElement("option");
-    o.value = opt;
-    o.textContent = opt;
-    select.appendChild(o);
+    drop.ondragover = function(event) { event.preventDefault(); };
+    bloc.appendChild(drop);
+    const label3 = document.createElement("label");
+    label3.textContent = lang === 'fr' ? 'Conformité' : 'Compliance';
+    bloc.appendChild(label3);
+    const select = document.createElement("select");
+    ["", "✅ Conforme", "❌ Non Conforme", "⚠️ Partiellement Conforme"].forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = opt;
+      select.appendChild(o);
+    });
+    bloc.appendChild(select);
+    qform.appendChild(bloc);
   });
-  bloc.appendChild(select);
-  qform.appendChild(bloc);
-});
+}
+
+genererFormulaire();
 </script>
 
 <div class="identite">
@@ -128,7 +121,7 @@ exigences.forEach((e, i) => {
 <button onclick="genererDOCX()">📝 Exporter le rapport Word</button>
 <button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
 <button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
-$1
+<p id="msgReset" style="color: green; font-weight: bold;"></p>
 <button onclick="sauvegarderFormulaire()">💾 Sauvegarder</button>
 <button onclick="restaurerFormulaire()">🔁 Restaurer</button>
 
@@ -350,6 +343,18 @@ function restaurerFormulaire() {
   });
   alert("🔁 Données restaurées.");
 }
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const mdp = prompt("🔒 Authentification requise
+Entrez le mot de passe d’accès :");
+  if (mdp !== "d2f2024") {
+    document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
+    throw new Error("Accès refusé");
+  }
+  genererFormulaire();
+  restaurerFormulaire();
+});
 </script>
 </body>
 </html>
