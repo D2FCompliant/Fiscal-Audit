@@ -104,7 +104,7 @@ function genererFormulaire() {
   });
 }
 
-genererFormulaire();
+// Appelé après déclaration complète des variables
 </script>
 
 <div class="identite">
@@ -346,6 +346,9 @@ function restaurerFormulaire() {
 </script>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
+  // Initialisation après chargement complet
+  const lang = localStorage.getItem("langue") || "fr";
+  document.getElementById("langSwitch").value = lang;
   const mdp = prompt("🔒 Authentification requise
 Entrez le mot de passe d’accès :");
   if (mdp !== "d2f2024") {
