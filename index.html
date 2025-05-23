@@ -31,12 +31,12 @@
 <body>
 <script>
 // const mdp = prompt("🔒 Authentification requise
-// Entrez le mot de passe d’accès :");
+Entrez le mot de passe d’accès :");
 // if (mdp !== "d2f2024") {
 //   document.body.innerHTML = "<h1 style='color:red'>⛔ Accès refusé</h1>";
 //   throw new Error("Accès refusé");
 // }
-// }
+}
 </script>
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
@@ -295,7 +295,7 @@ function genererPDF() {
       y += 35;
     } else if (textData) {
       const blocText = doc.splitTextToSize("📂 Fichier déposé :
-" + textData.slice(0, 500), 180);
+" + (textData || "[aucun contenu extrait]"), 180);
       doc.text(blocText, 10, y);
       y += blocText.length * 5;
     } else {
@@ -317,7 +317,28 @@ function genererDOCX() {
     title: "Rapport d’Audit",
     description: "Audit de conformité fiscal & réglementaire"
   });
-  const content = [];
+  const content = [
+    new Paragraph({ children: [new TextRun({ text: "D2F Compliant", bold: true, size: 32 })], spacing: { after: 400 } }),
+    new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit de Conformité", size: 28 })], spacing: { after: 800 } }),
+    new Paragraph({ children: [new TextRun({ text: new Date().toLocaleDateString(), italics: true, size: 24 })], spacing: { after: 400 } }),
+    new Paragraph(" "),
+    new Paragraph("Table des matières"),
+    new Paragraph(" ")
+  ];
+  // Génération de la table des matières dynamique
+  exigences_traduites[window.lang].forEach((e, i) => {
+    content.push(new Paragraph({
+      children: [
+        new TextRun({
+          text: `${i + 1}. ${e[0]}`,
+          bold: false,
+          italics: true
+        })
+      ]
+    }));
+  });
+
+  // Ajout de l'identité auditée
   content.push(
     new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit – D2F Compliant", bold: true, size: 28 })] }),
     new Paragraph(" "),
