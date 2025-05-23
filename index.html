@@ -64,6 +64,49 @@ window.addEventListener("DOMContentLoaded", () => {
 <button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
 <p id="msgReset" style="color: green; font-weight: bold;"></p>
 <script>
+function creerDropzone(container) {
+  const dropzone = document.createElement("div");
+  dropzone.className = "dropzone";
+  dropzone.innerText = "Déposez ici vos preuves (images, PDF, texte...)";
+
+  const fileList = document.createElement("ul");
+  fileList.className = "dropzone-list";
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.style.backgroundColor = "#eef";
+  });
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.style.backgroundColor = "#fdfdfd";
+  });
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.style.backgroundColor = "#fdfdfd";
+    Array.from(e.dataTransfer.files).forEach(file => {
+      const li = document.createElement("li");
+      li.textContent = file.name;
+      li.dataset.filename = file.name;
+      li.dataset.mimetype = file.type;
+
+      if (file.type.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.style.maxWidth = "100px";
+        img.style.marginTop = "5px";
+        li.appendChild(img);
+      } else if (file.type.startsWith("text/") || file.type === "application/json") {
+        const reader = new FileReader();
+        reader.onload = () => { li.dataset.content = reader.result; };
+        reader.readAsText(file);
+      }
+      fileList.appendChild(li);
+    });
+  });
+
+  container.appendChild(dropzone);
+  container.appendChild(fileList);
+}
+
 const langues = {
   fr: {
     conforme: "✅ Conforme",
@@ -394,7 +437,7 @@ async function genererDOCX() {
   }
 }
 </script>
-  <script>
+<script>
   async function genererDOCX() {
     const { Document, Packer, Paragraph, TextRun } = window.docx;
 
