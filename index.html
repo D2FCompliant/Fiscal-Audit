@@ -274,7 +274,9 @@ function genererPDF() {
     const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
     const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
     const conf = block.querySelector('select')?.value;
-    const imageData = block.querySelector('.dropzone')?.dataset.image;
+    const dropzone = block.querySelector('.dropzone');
+    const imageData = dropzone?.dataset.image;
+    const textData = dropzone?.dataset.text;
 
     doc.setFont(undefined, 'bold');
     doc.text(titre || `Exigence ${i+1}`, 10, y);
@@ -289,8 +291,13 @@ function genererPDF() {
     if (imageData) {
       doc.addImage(imageData, 'JPEG', 10, y, 40, 30);
       y += 35;
+    } else if (textData) {
+      const blocText = doc.splitTextToSize("📂 Fichier déposé :
+" + textData.slice(0, 500), 180);
+      doc.text(blocText, 10, y);
+      y += blocText.length * 5;
     } else {
-      doc.text("Preuve : (aucune image)", 10, y);
+      doc.text("Preuve : (aucune image ou texte)", 10, y);
       y += 5;
     }
     y += 3;
@@ -320,13 +327,16 @@ function genererDOCX() {
     const attendu = block.querySelector(".attendu")?.innerText;
     const reponse = block.querySelector("textarea:nth-of-type(1)")?.value || "";
     const preuve = block.querySelector("textarea:nth-of-type(2)")?.value || "";
+    const dropzone = block.querySelector(".dropzone");
     const conf = block.querySelector("select")?.value || "";
+    const textData = dropzone?.dataset.text || "";
 
     content.push(
       new Paragraph({ text: `${i + 1}. ${titre}`, heading: "HEADING_2" }),
       new Paragraph("📌 Attendu : " + attendu),
       new Paragraph("🖊 Réponse : " + reponse),
       new Paragraph("🔎 Preuve : " + preuve),
+      new Paragraph("📂 Fichier déposé : " + textData),
       new Paragraph("🔍 Conformité : " + conf),
       new Paragraph(" ")
     );
