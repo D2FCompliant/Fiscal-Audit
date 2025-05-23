@@ -52,11 +52,6 @@
 <button onclick="sauvegarderFormulaire()">💾 Sauvegarder</button>
 <button onclick="restaurerFormulaire()">🔁 Restaurer</button>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const selectLangue = document.getElementById("langSwitch");
-  const storedLang = localStorage.getItem("langue") || "fr";
-  selectLangue.value = storedLang;
-  genererFormulaire();
 });
 const exigences_traduites = {
   fr: [
