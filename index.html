@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  
   <meta charset="UTF-8">
   <title>Audit de Conformité – D2F Compliant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background-color: #f9f9f9; }
     h1, h2 { color: #222; }
@@ -27,15 +27,38 @@
       padding: 0.5em; margin-top: 0.5em; border-left: 4px solid #88a;
     }
   </style>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  if (!window.docx) {
+    console.error("❌ La bibliothèque docx.js n'est pas chargée correctement.");
+  } else {
+    console.log("✅ docx.js est chargé et prêt à l'emploi.");
+  }
+});
+</script>
 </head>
 <body>
+<script>
+  const autorise = (() => {
+    const mdp = prompt("🔒 Authentification requise
+Entrez le mot de passe d’accès :");
+    if (mdp !== "d2f2024") {
+      document.write("<h1 style='color:red'>⛔ Accès refusé</h1>");
+      return false;
+    }
+    return true;
+  })();
+  if (!autorise) throw new Error("Accès refusé");
+</script>
+
 <h1>Audit de Conformité – D2F Compliant</h1>
 <label for="langSwitch">🌐 Langue / Language</label>
 <select id="langSwitch" onchange="changerLangue(this.value)">
   <option value="fr">Français</option>
   <option value="en">English</option>
 </select>
-<p id="msgReset" style="color: green; font-weight: bold;"></p>
+<script>document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";</script>
 <div class="identite">
   <h2>🧾 Informations sur l'entité auditée</h2>
   <label for="societe">Nom de la société</label>
@@ -45,8 +68,29 @@
   <label for="participants">Participants</label>
   <textarea id="participants"></textarea>
 </div>
+<div id="questionnaire"></div>
+<button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
+<button onclick="genererDOCX()">📝 Exporter le rapport Word</button>
+<button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
+<p id="msgReset" style="color: green; font-weight: bold;"></p>
 <script>
-});
+const langues = {
+  fr: {
+    conforme: "✔ Conforme",
+    nonConforme: "✘ Non Conforme",
+    partiel: "! Partiellement Conforme",
+    exporter: "📄 Exporter le rapport PDF",
+    horodatage: "Horodatage : "
+  },
+  en: {
+    conforme: "✔ Compliant",
+    nonConforme: "✘ Non-Compliant",
+    partiel: "! Partially Compliant",
+    exporter: "📄 Export PDF Report",
+    horodatage: "Timestamp: "
+  }
+};
+
 const exigences_traduites = {
   fr: [
     ["Unicité des factures", "Chaque facture doit comporter un identifiant unique, non réutilisable, chronologique et sans rupture de séquence. Réf. BOI-CF-COM-10-10-20-60."],
@@ -119,132 +163,59 @@ function changerLangue(val) {
   location.reload();
 }
 
-function genererFormulaire() {
-  window.lang = localStorage.getItem("langue") || 'fr';
-  const exigences = exigences_traduites[window.lang];
-  const qform = document.getElementById("questionnaire");
-  qform.innerHTML = '';
-  exigences.forEach((e, i) => {
-    const bloc = document.createElement("div");
-    bloc.className = "question-block";
-    const h2 = document.createElement("h2");
-    h2.textContent = `${i + 1}. ${e[0]}`;
-    bloc.appendChild(h2);
-    const attendu = document.createElement("div");
-    attendu.className = "attendu";
-    attendu.textContent = e[1];
-    bloc.appendChild(attendu);
-    const label1 = document.createElement("label");
-    label1.textContent = window.lang === 'fr' ? 'Réponse' : 'Answer';
-    bloc.appendChild(label1);
-    const textarea1 = document.createElement("textarea");
-    bloc.appendChild(textarea1);
-    const label2 = document.createElement("label");
-    label2.textContent = window.lang === 'fr' ? 'Preuve' : 'Evidence';
-    bloc.appendChild(label2);
-    const textarea2 = document.createElement("textarea");
-    bloc.appendChild(textarea2);
-    const drop = document.createElement("div");
-    drop.className = "dropzone";
-    drop.style.border = "2px dashed #aaa";
-    drop.style.padding = "10px";
-    drop.style.minHeight = "60px";
-    drop.style.background = "#f0f8ff";
-    drop.textContent = window.lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here';
-    drop.ondrop = function(event) {
+const lang = localStorage.getItem('langue') || 'fr';
+const exigences = exigences_traduites[lang];
+const qform = document.getElementById("questionnaire");
+qform.innerHTML = '';
+exigences.forEach((e, i) => {
+  const bloc = document.createElement("div");
+  bloc.className = "question-block";
+  bloc.innerHTML = `<h2>${i + 1}. ${e[0]}</h2>
+    <div class="attendu">${e[1]}</div>
+    <label>${lang === 'fr' ? 'Réponse' : 'Answer'}</label>
+    <textarea></textarea>
+    <label>${lang === 'fr' ? 'Preuve' : 'Evidence'}</label>
+    <div class="dropzone" ondrop="dropImage(event, this)" ondragover="event.preventDefault()" style="border: 2px dashed #aaa; padding: 10px; min-height: 60px; background: #f0f8ff;">${lang === 'fr' ? 'Déposez ici une image' : 'Drop an image here'}</div>
+    <label>${lang === 'fr' ? 'Conformité' : 'Compliance'}</label>
+    <select>
+      <option value="">-- ${lang === 'fr' ? 'Choisir' : 'Select'} --</option>
+      <option value="✅ Conforme">${langues[lang].conforme}</option>
+      <option value="❌ Non Conforme">${langues[lang].nonConforme}</option>
+      <option value="⚠️ Partiellement Conforme">${langues[lang].partiel}</option>
+    </select>`;
+  qform.appendChild(bloc);
+});
+
+function reinitialiserFormulaire() {
+  document.querySelectorAll('.question-block').forEach(block => {
+    block.querySelectorAll('textarea').forEach(t => t.value = "");
+    const sel = block.querySelector('select');
+    if (sel) sel.value = "";
+  });
+  const msg = document.getElementById('msgReset');
+  msg.textContent = '✔️ Formulaire réinitialisé';
+  setTimeout(() => msg.textContent = '', 3000);
+}
+
+function dropImage(event, zone) {
   event.preventDefault();
   const file = event.dataTransfer.files[0];
+  if (!file.type.startsWith('image/')) return;
   const reader = new FileReader();
-
-  if (file.type.startsWith('image/')) {
-    reader.onload = function(e) {
-      drop.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.style.maxWidth = "100px";
-      drop.appendChild(img);
-      drop.dataset.image = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  } else if (file.type.startsWith('text/') || file.type === 'application/pdf') {
-    reader.onload = function(e) {
-      drop.textContent = e.target.result.slice(0, 500) + '...';
-      drop.dataset.text = e.target.result;
-    };
-    reader.readAsText(file);
-  } else {
-    drop.textContent = "❌ Format non supporté";
-  }
-    };
-    drop.ondragover = function(event) { event.preventDefault(); };
-    bloc.appendChild(drop);
-    const label3 = document.createElement("label");
-    label3.textContent = window.lang === 'fr' ? 'Conformité' : 'Compliance';
-    bloc.appendChild(label3);
-    const select = document.createElement("select");
-    ["", "✅ Conforme", "❌ Non Conforme", "⚠️ Partiellement Conforme"].forEach(opt => {
-      const o = document.createElement("option");
-      o.value = opt;
-      o.textContent = opt;
-      select.appendChild(o);
-    });
-    bloc.appendChild(select);
-    qform.appendChild(bloc);
-  });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("langSwitch").value = localStorage.getItem("langue") || "fr";
-  genererFormulaire();
-});
-function sauvegarderFormulaire() {
-  const data = {
-    societe: document.getElementById("societe").value,
-    adresse: document.getElementById("adresse").value,
-    participants: document.getElementById("participants").value,
-    questions: Array.from(document.querySelectorAll(".question-block")).map(block => ({
-      reponse: block.querySelector("textarea:nth-of-type(1)").value,
-      preuve: block.querySelector("textarea:nth-of-type(2)").value,
-      conf: block.querySelector("select").value,
-      image: block.querySelector(".dropzone")?.dataset.image || null
-    }))
+  reader.onload = function(e) {
+    zone.innerHTML = `<img src="${e.target.result}" style="max-width:100px;">`;
+    zone.dataset.image = e.target.result;
   };
-  localStorage.setItem("auditFormData", JSON.stringify(data));
-  alert("✔️ Données sauvegardées");
+  reader.readAsDataURL(file);
 }
 
-function restaurerFormulaire() {
-  const saved = localStorage.getItem("auditFormData");
-  if (!saved) return alert("⚠️ Aucune donnée sauvegardée trouvée.");
-  const data = JSON.parse(saved);
-  document.getElementById("societe").value = data.societe;
-  document.getElementById("adresse").value = data.adresse;
-  document.getElementById("participants").value = data.participants;
-  const blocks = document.querySelectorAll(".question-block");
-  data.questions.forEach((q, i) => {
-    if (blocks[i]) {
-      blocks[i].querySelector("textarea:nth-of-type(1)").value = q.reponse;
-      blocks[i].querySelector("textarea:nth-of-type(2)").value = q.preuve;
-      blocks[i].querySelector("select").value = q.conf;
-      if (q.image) {
-        const drop = blocks[i].querySelector(".dropzone");
-        drop.innerHTML = "";
-        const img = document.createElement("img");
-        img.src = q.image;
-        img.style.maxWidth = "100px";
-        drop.appendChild(img);
-        drop.dataset.image = q.image;
-      }
-    }
-  });
-  alert("🔁 Données restaurées");
-}
 function genererPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   let y = 10;
+  let conforme = 0, nonConforme = 0, partiel = 0;
   doc.setFontSize(14);
-  doc.text("Rapport d'Audit – D2F Compliant", 105, y, null, null, "center");
+  doc.text("Rapport d'Audit – D2F Compliant d.o.o", 105, y, null, null, "center");
   y += 10;
   doc.setFontSize(10);
 
@@ -262,75 +233,80 @@ function genererPDF() {
     const reponse = block.querySelector('textarea:nth-of-type(1)')?.value;
     const preuve = block.querySelector('textarea:nth-of-type(2)')?.value;
     const conf = block.querySelector('select')?.value;
-    const dropzone = block.querySelector('.dropzone');
-    const imageData = dropzone?.dataset.image;
-    const textData = dropzone?.dataset.text;
+    const imageData = block.querySelector('.dropzone')?.dataset.image;
+
+    if (conf.includes("Conforme")) conforme++;
+    else if (conf.includes("Non Conforme")) nonConforme++;
+    else if (conf.includes("Partiellement")) partiel++;
 
     doc.setFont(undefined, 'bold');
-    doc.text(titre || `Exigence ${i+1}`, 10, y);
-    y += 5;
+    doc.text(titre || `Exigence ${i+1}`, 10, y); y += 5;
     doc.setFont(undefined, 'normal');
-    const blocAttendu = doc.splitTextToSize(attendu, 180);
-    doc.text(blocAttendu, 10, y);
-    y += blocAttendu.length * 5;
-    y += 3;
-    doc.text(doc.splitTextToSize("Réponse : " + (reponse || ""), 180), 10, y);
-    y += 5;
+    if (attendu) {
+      const blocAttendu = doc.splitTextToSize(attendu, 180);
+      doc.text(blocAttendu, 10, y);
+      y += blocAttendu.length * 5;
+    } y += 5;
+    const blocReponse = doc.splitTextToSize("Réponse : " + (reponse || ""), 180);
+    doc.text(blocReponse, 10, y);
+    y += blocReponse.length * 5; y += 5;
     if (imageData) {
       doc.addImage(imageData, 'JPEG', 10, y, 40, 30);
       y += 35;
-    } else if (textData) {
-      const blocText = doc.splitTextToSize("📂 Fichier déposé :
-" + (textData || "[aucun contenu extrait]"), 180);
-      doc.text(blocText, 10, y);
-      y += blocText.length * 5;
     } else {
-      doc.text("Preuve : (aucune image ou texte)", 10, y);
-      y += 5;
-    }
-    y += 3;
-    doc.text(doc.splitTextToSize("Conformité : " + (conf || ""), 180), 10, y);
-    y += 10;
+      doc.text("Preuve : (aucune image)", 10, y); y += 5;
+    } y += 5;
+    const blocConf = doc.splitTextToSize("Conformité : " + (conf || ""), 180);
+    doc.text(blocConf, 10, y);
+    y += blocConf.length * 5; y += 8;
     if (y > 270) { doc.addPage(); y = 10; }
   });
-  doc.save("rapport_audit_d2f.pdf");
+
+  doc.addPage();
+  y = 10;
+  doc.setFontSize(12);
+  doc.text("📊 Synthèse de conformité", 10, y); y += 8;
+  doc.setFontSize(10);
+  doc.text(`✅ Conforme : ${conforme}`, 10, y); y += 5;
+  doc.text(`❌ Non Conforme : ${nonConforme}`, 10, y); y += 5;
+  doc.text(`⚠️ Partiellement Conforme : ${partiel}`, 10, y); y += 8;
+
+  doc.text("📌 Recommandations générales :", 10, y); y += 6;
+  doc.text("- Documenter toute non-conformité détectée.", 10, y); y += 5;
+  doc.text("- Planifier une revue régulière du système de facturation.", 10, y); y += 5;
+  doc.text("- Vérifier la synchronisation avec les obligations PDP.", 10, y); y += 5;
+  doc.text("- Maintenir les journaux en accès protégé.", 10, y); y += 5;
+
+  doc.text(`🧮 Note finale : ${((conforme / exigences.length) * 20).toFixed(1)} / 20`, 10, y); y += 6;
+  doc.setFontSize(8);
+  doc.text(langues[lang].horodatage + new Date().toISOString(), 10, y);
+
+  const logo = new Image();
+  logo.src = 'https://d2fcompliant.github.io/d2fcompliant-audit-interface/logo.jpg';
+  logo.onload = function() {
+    doc.addImage(logo, 'JPEG', 150, y - 20, 40, 20);
+    doc.save("rapport_audit_d2f.pdf");
+  };
 }
-
-function genererDOCX() {
+</script>
+<script>
+async function genererDOCX() {
+  console.log("📤 Début génération DOCX...");
   const { Document, Packer, Paragraph, TextRun, Media } = window.docx;
-  const doc = new Document({
-    creator: "D2F Compliant",
-    title: "Rapport d’Audit",
-    description: "Audit de conformité fiscal & réglementaire"
-  });
-  const content = [
-    new Paragraph({ children: [new TextRun({ text: "D2F Compliant", bold: true, size: 32 })], spacing: { after: 400 } }),
-    new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit de Conformité", size: 28 })], spacing: { after: 800 } }),
-    new Paragraph({ children: [new TextRun({ text: new Date().toLocaleDateString(), italics: true, size: 24 })], spacing: { after: 400 } }),
-    new Paragraph(" "),
-    new Paragraph("Table des matières"),
-    new Paragraph(" ")
-  ];
-  // Génération de la table des matières dynamique
-  exigences_traduites[window.lang].forEach((e, i) => {
-    content.push(new Paragraph({
-      children: [
-        new TextRun({
-          text: `${i + 1}. ${e[0]}`,
-          bold: false,
-          italics: true
-        })
-      ]
-    }));
-  });
 
-  // Ajout de l'identité auditée
+  const doc = new Document();
+  const content = [];
+
+  const societe = document.getElementById("societe").value;
+  const adresse = document.getElementById("adresse").value;
+  const participants = document.getElementById("participants").value;
+
   content.push(
     new Paragraph({ children: [new TextRun({ text: "Rapport d’Audit – D2F Compliant", bold: true, size: 28 })] }),
     new Paragraph(" "),
-    new Paragraph("🧾 Nom de la société : " + document.getElementById("societe").value),
-    new Paragraph("📍 Adresse : " + document.getElementById("adresse").value),
-    new Paragraph("👥 Participants : " + document.getElementById("participants").value),
+    new Paragraph("🧾 Nom de la société : " + societe),
+    new Paragraph("📍 Adresse : " + adresse),
+    new Paragraph("👥 Participants : " + participants),
     new Paragraph("📅 Date : " + new Date().toLocaleString()),
     new Paragraph(" ")
   );
@@ -340,34 +316,44 @@ function genererDOCX() {
     const attendu = block.querySelector(".attendu")?.innerText;
     const reponse = block.querySelector("textarea:nth-of-type(1)")?.value || "";
     const preuve = block.querySelector("textarea:nth-of-type(2)")?.value || "";
-    const dropzone = block.querySelector(".dropzone");
     const conf = block.querySelector("select")?.value || "";
-    const textData = dropzone?.dataset.text || "";
+    const dropzone = block.querySelector(".dropzone");
+    const imageData = dropzone?.dataset.image;
 
     content.push(
       new Paragraph({ text: `${i + 1}. ${titre}`, heading: "HEADING_2" }),
       new Paragraph("📌 Attendu : " + attendu),
       new Paragraph("🖊 Réponse : " + reponse),
       new Paragraph("🔎 Preuve : " + preuve),
-      new Paragraph("📂 Fichier déposé : " + textData),
-      new Paragraph("🔍 Conformité : " + conf),
-      new Paragraph(" ")
+      new Paragraph("🔍 Conformité : " + conf)
     );
+
+    if (imageData) {
+      const imageBuffer = base64ToArrayBuffer(imageData.split(',')[1]);
+      const image = Media.addImage(doc, imageBuffer, 200, 120);
+      content.push(new Paragraph(image));
+    }
+    content.push(new Paragraph(" "));
   });
 
   doc.addSection({ children: content });
-  Packer.toBlob(doc).then(blob => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "rapport_audit_d2f.docx";
-    a.click();
-  });
+
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "rapport_audit_d2f.docx";
+  a.click();
+
+  function base64ToArrayBuffer(base64) {
+    const binary_string = window.atob(base64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
 }
-<button onclick="genererDOCX()">📝 Exporter le rapport Word</button>
-<button onclick="genererPDF()">📄 Exporter le rapport PDF</button>
-<button onclick="reinitialiserFormulaire()">♻️ Réinitialiser le formulaire</button>
-<button onclick="sauvegarderFormulaire()">💾 Sauvegarder</button>
-<button onclick="restaurerFormulaire()">🔁 Restaurer</button>
 </script>
 </body>
 </html>
