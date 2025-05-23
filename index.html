@@ -187,17 +187,18 @@ function reinitialiserFormulaire() {
   setTimeout(() => msg.textContent = '', 3000);
 }
 
-function dropImage(event, zone) {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  if (!file.type.startsWith('image/')) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    zone.innerHTML = `<img src="${e.target.result}" style="max-width:100px;">`;
-    zone.dataset.image = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
+//function dropImage(event, zone) {
+//  event.preventDefault();
+//  const file = event.dataTransfer.files[0];
+//  if (!file.type.startsWith('image/')) return;
+//  const reader = new FileReader();
+//  reader.onload = function(e) {
+//    zone.innerHTML = `<img src="${e.target.result}" style="max-width:100px;">`;
+//    zone.dataset.image = e.target.result;
+//  };
+//  reader.readAsDataURL(file);
+//}
+  
 function creerDropzone(container) {
   const dropzone = document.createElement("div");
   dropzone.className = "dropzone";
