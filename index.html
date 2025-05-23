@@ -382,5 +382,84 @@ async function genererDOCX() {
     doc.save("rapport_audit.pdf");
   }
 </script>
+<script>
+  async function genererDOCX() {
+    const { Document, Packer, Paragraph, TextRun } = window.docx;
+
+    const societe = document.getElementById("societe")?.value || "";
+    const adresse = document.getElementById("adresse")?.value || "";
+    const participants = document.getElementById("participants")?.value || "";
+
+    const reponses = [];
+    document.querySelectorAll(".question-block").forEach((el) => {
+  const titre = el.querySelector("h2")?.innerText || "Sans titre";
+  const attendu = el.querySelector(".attendu")?.innerText || "";
+  const reponse = el.querySelector("textarea:nth-of-type(1)")?.value || "";
+  const preuve = el.querySelector("textarea:nth-of-type(2)")?.value || "";
+  const conformite = el.querySelector("select")?.value || "";
+
+  // Ajouter dans le document (Word ou PDF)
+});
+
+    const doc = new Document({
+      sections: [{
+        children: [
+          new Paragraph({ children: [new TextRun({ text: "📝 Rapport d'Audit – D2F Compliant", bold: true, size: 32 })] }),
+          new Paragraph(" "),
+          new Paragraph("🔹 Informations Générales :"),
+          new Paragraph("Société : " + societe),
+          new Paragraph("Adresse : " + adresse),
+          new Paragraph("Participants : " + participants),
+          new Paragraph(" "),
+          new Paragraph("🔍 Résultats du questionnaire :"),
+          ...reponses.map(r => new Paragraph(r))
+        ]
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const lien = document.createElement("a");
+    lien.href = URL.createObjectURL(blob);
+    lien.download = "rapport_audit.docx";
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+  }
+
+  function genererPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const societe = document.getElementById("societe")?.value || "";
+    const adresse = document.getElementById("adresse")?.value || "";
+    const participants = document.getElementById("participants")?.value || "";
+
+    let y = 10;
+    doc.setFontSize(14);
+    doc.text("📝 Rapport d'Audit – D2F Compliant", 10, y);
+    y += 10;
+
+    doc.setFontSize(11);
+    doc.text(`Société : ${societe}`, 10, y); y += 7;
+    doc.text(`Adresse : ${adresse}`, 10, y); y += 7;
+    doc.text(`Participants : ${participants}`, 10, y); y += 10;
+
+    doc.setFont(undefined, "bold");
+    doc.text("🔍 Résultats du questionnaire :", 10, y); y += 8;
+    doc.setFont(undefined, "normal");
+
+    document.querySelectorAll(".question").forEach((el) => {
+      const question = el.querySelector("label")?.innerText || "Question";
+      const champ = el.querySelector("input, textarea, select");
+      let reponse = champ?.value || "Non renseigné";
+
+      if (y > 270) { doc.addPage(); y = 10; }
+      doc.text(`${question}`, 10, y); y += 5;
+      doc.text(`Réponse : ${reponse}`, 10, y); y += 8;
+    });
+
+    doc.save("rapport_audit.pdf");
+  }
+</script>
 </body>
 </html>
